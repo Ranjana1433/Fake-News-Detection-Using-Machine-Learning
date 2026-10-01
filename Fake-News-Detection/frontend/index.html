@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fake News Detection using Machine Learning</title>
+<style>
+:root{--bg:#f4f5ff;--c:#fff;--t:#1c2243;--m:#69729a;--b:#e3e7f8;--ok:#10b981;--er:#ef4444;--wa:#f59e0b}
+body.d{--bg:#0b1026;--c:#151d3b;--t:#e9edff;--m:#98a3cc;--b:#283362}
+*{box-sizing:border-box;margin:0;font-family:'Segoe UI',system-ui,sans-serif}
+body{background:var(--bg);color:var(--t)}
+nav{position:sticky;top:0;z-index:9;display:flex;gap:4px;flex-wrap:wrap;align-items:center;padding:12px 22px;background:linear-gradient(90deg,#ef4444,#8b5cf6,#06b6d4);color:#fff}
+nav b{margin-right:auto;font-size:18px}nav a{color:#fff;text-decoration:none;padding:7px 13px;border-radius:18px;font-size:14px;cursor:pointer}nav a:hover{background:#fff3}
+.hero{text-align:center;color:#fff;padding:70px 20px 95px;background:linear-gradient(135deg,#be123c,#7c3aed 55%,#0891b2)}
+.hero h1{font-size:clamp(26px,5vw,46px);max-width:850px;margin:auto}.hero p{max-width:640px;margin:16px auto 26px;opacity:.95}
+.btn{border:0;cursor:pointer;color:#fff;font-weight:600;font-size:15px;padding:12px 26px;border-radius:26px;background:linear-gradient(90deg,#7c3aed,#06b6d4);transition:.2s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px #7c3aed55}.btn.w{background:#fff;color:#7c3aed}.btn.r{background:var(--er)}.btn.s{padding:7px 16px;font-size:13px}.btn.g{background:#64748b}
+main{max-width:1100px;margin:-55px auto 30px;padding:0 16px}section{margin:26px 0}h2{margin-bottom:14px}
+.card{background:var(--c);border:1px solid var(--b);border-radius:20px;padding:22px;box-shadow:0 8px 26px #7c3aed14}
+.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px}
+.g4{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:16px}
+.stat{color:#fff;border-radius:18px;padding:18px;background:linear-gradient(135deg,#7c3aed,#06b6d4)}.stat:nth-child(2){background:linear-gradient(135deg,#ef4444,#f59e0b)}.stat:nth-child(3){background:linear-gradient(135deg,#10b981,#06b6d4)}.stat:nth-child(4){background:linear-gradient(135deg,#8b5cf6,#ec4899)}
+.stat b{display:block;font-size:28px}
+textarea{width:100%;height:170px;padding:14px;border:1px solid var(--b);border-radius:14px;background:var(--bg);color:var(--t);font-size:15px;resize:vertical}
+.gauge{width:170px;height:170px;border-radius:50%;margin:6px auto;display:grid;place-items:center;background:#e5e7eb}
+.gauge div{width:132px;height:132px;border-radius:50%;background:var(--c);display:grid;place-items:center;text-align:center;font-weight:800;font-size:22px}
+.tag{display:inline-block;padding:4px 14px;border-radius:14px;color:#fff;font-size:13px;font-weight:600;margin:3px}
+.FAKE{background:var(--er)}.REAL{background:var(--ok)}.UNCERTAIN{background:var(--wa)}
+.flags{list-style:none;padding:0;margin-top:10px}.flags li{padding:8px 12px;margin:5px 0;border-radius:10px;background:var(--bg);font-size:14px;border-left:4px solid var(--wa)}
+.hl{line-height:2;font-size:15px;margin-top:10px}.hl mark{border-radius:6px;padding:1px 3px;color:inherit}.fk{background:#ef444455}.rl{background:#10b98155}
+.bars div{margin:6px 0;font-size:13px}.bars i{display:block;height:9px;border-radius:6px;margin-top:3px}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:9px;text-align:left;border-bottom:1px solid var(--b)}th{color:var(--m)}.tw{overflow-x:auto}
+.mu{color:var(--m);font-size:14px}#toast{position:fixed;bottom:22px;right:22px;background:#111827;color:#fff;padding:12px 20px;border-radius:14px;opacity:0;transition:.3s;z-index:99}#toast.on{opacity:1}
+footer{text-align:center;color:var(--m);font-size:13px;padding:26px}
+</style></head><body>
+<nav><b>🛡️ FakeNews AI</b><a href="#check">Detector</a><a href="#dash">Dashboard</a><a href="#batch">Batch</a><a href="#hist">History</a><a href="#train">Train</a><a id="dm">🌓</a></nav>
+<div class="hero"><h1>Fake News Detection using Machine Learning</h1>
+<p>Paste a headline or article. Two ML models (TF-IDF + Logistic Regression and Naive Bayes) analyse the writing style, highlight suspicious words and give a credibility score.</p>
+<a href="#check"><button class="btn w">Check News Now →</button></a></div>
+<main>
+<section id="check"><div class="g2">
+<div class="card"><h2>📰 Enter News Text</h2><textarea id="tx" placeholder="Paste a news headline or article here (min 15 characters)..."></textarea>
+<div style="margin-top:12px"><button class="btn" id="go">🔍 Analyze</button> <button class="btn s g" id="sf">Sample: Fake</button> <button class="btn s g" id="sr">Sample: Real</button> <button class="btn s g" id="cl">Clear</button></div></div>
+<div class="card"><h2>🧠 Verdict</h2><div class="gauge" id="gauge"><div id="gv">--</div></div>
+<div style="text-align:center"><span class="tag UNCERTAIN" id="vt">Waiting...</span></div>
+<p class="mu" style="text-align:center;margin-top:8px" id="meta">Credibility score and model details appear here.</p>
+<ul class="flags" id="flags"></ul></div></div>
+<div class="card" style="margin-top:18px;display:none" id="hbox"><h3>Word-level explanation</h3><p class="mu"><mark class="fk">Red</mark> words push towards FAKE, <mark class="rl">green</mark> words push towards REAL.</p><div class="hl" id="hl"></div></div></section>
+
+<section id="dash"><h2>📈 Analytics Dashboard</h2><div class="g4" id="stats"></div>
+<div class="g2"><div class="card"><h3>Fake vs Real checks</h3><canvas id="c1"></canvas></div><div class="card"><h3>Confidence of recent checks</h3><canvas id="c2"></canvas></div></div>
+<div class="g2" style="margin-top:18px"><div class="card"><h3>🔴 Top FAKE indicator words</h3><div class="bars" id="tf"></div></div><div class="card"><h3>🟢 Top REAL indicator words</h3><div class="bars" id="tr"></div></div></div></section>
+
+<section id="batch"><div class="card"><h2>📂 Batch Check</h2><p class="mu">Paste several news items, one per line.</p><br><textarea id="bx" style="height:110px"></textarea><br><br><button class="btn" id="bgo">Analyze all</button><div class="tw" id="bt" style="margin-top:14px"></div></div></section>
+
+<section id="hist"><div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><h2>🕘 History</h2><div><button class="btn s" id="ex">Export CSV</button> <button class="btn r s" id="clr">Clear all</button></div></div><div class="tw" id="ht"></div></div></section>
+
+<section id="train"><div class="card"><h2>🎓 Train with your own dataset</h2><p class="mu">Upload a CSV with columns <code>text,label</code> (label: 1 = fake, 0 = real; at least 20 rows) to retrain the models on real data such as Kaggle's Fake/True news.</p><br><input type="file" id="csv" accept=".csv"><p id="tm" class="mu" style="margin-top:10px"></p></div></section>
+
+<section><div class="card"><h2>⚙️ How it works</h2><p class="mu">Text is converted to TF-IDF features (words and word pairs). A Logistic Regression model and a Naive Bayes model each estimate the chance the text is fake; the final score blends both. Rule-based red flags (shouting, clickbait, missing sources) adjust the credibility score. <b>Note:</b> the built-in model is trained on a small sample dataset, so use it for learning and demos; train on a large real dataset for serious use, and always verify news from trusted sources.</p></div></section>
+</main><footer>© 2026 Fake News Detection using Machine Learning · Educational project</footer><div id="toast"></div>
+<script src="/static/chart.umd.js"></script>
+<script>
+"use strict";
+var $=function(s){return document.querySelector(s)},ch={};
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function toast(m){var t=$('#toast');t.textContent=m;t.className='on';setTimeout(function(){t.className=''},3000)}
+async function api(p,o){try{var r=await fetch(p,o);if(!r.ok){var e=await r.json().catch(function(){return{}});throw new Error(typeof e.detail==='string'?e.detail:'Please enter at least 15 characters of valid text.')}return await r.json()}catch(e){toast(e.message==='Failed to fetch'?'Server not reachable. Keep "python main.py" running.':e.message);return null}}
+function post(p,b){return api(p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)})}
+$('#sf').onclick=function(){$('#tx').value="SHOCKING: Miracle fruit cures every disease overnight, doctors hate it! Share before the government deletes this secret!!!"};
+$('#sr').onclick=function(){$('#tx').value="The health ministry said on Tuesday that vaccination coverage rose to 84 percent, according to a report released by officials."};
+$('#cl').onclick=function(){$('#tx').value='';$('#hbox').style.display='none'};
+$('#dm').onclick=function(){document.body.classList.toggle('d')};
+$('#go').onclick=async function(){var r=await post('/api/analyze',{text:$('#tx').value});if(!r)return;
+var col=r.verdict==='FAKE'?'#ef4444':r.verdict==='REAL'?'#10b981':'#f59e0b';$('#gauge').style.background='conic-gradient('+col+' '+r.credibility*3.6+'deg,#e5e7eb 0)';
+$('#gv').innerHTML='<span>'+r.credibility+'<br><small style="font-size:12px;font-weight:400">credibility</small></span>';$('#vt').textContent=r.verdict+' · '+r.confidence+'% sure';$('#vt').className='tag '+r.verdict;
+$('#meta').textContent='Fake probability '+r.fake_probability+'% (Logistic Regression '+r.lr+'%, Naive Bayes '+r.nb+'%)';
+$('#flags').innerHTML=r.flags.length?r.flags.map(function(f){return'<li>🚩 '+esc(f)+'</li>'}).join(''):'<li style="border-color:#10b981">✅ No obvious red flags found</li>';
+$('#hl').innerHTML=r.tokens.map(function(t){var w=t[1];return Math.abs(w)>0.35?'<mark class="'+(w>0?'fk':'rl')+'">'+esc(t[0])+'</mark>':esc(t[0])}).join('');$('#hbox').style.display='block';toast('Analysis saved ✅');load()};
+function chart(id,cfg){if(ch[id])ch[id].destroy();if(window.Chart)ch[id]=new Chart($('#'+id),cfg)}
+function bars(id,a,c){var m=Math.max.apply(null,a.map(function(x){return x[1]}).concat([.1]));$(id).innerHTML=a.map(function(x){return'<div>'+esc(x[0])+' ('+x[1]+')<i style="width:'+x[1]/m*100+'%;background:'+c+'"></i></div>'}).join('')}
+async function load(){var s=await api('/api/stats');if(!s)return;var H=s.history,f=H.filter(function(x){return x.verdict==='FAKE'}).length,r=H.filter(function(x){return x.verdict==='REAL'}).length;
+$('#stats').innerHTML=[['Total checks',H.length],['Fake detected',f],['Real detected',r],['Sample-data accuracy',s.metrics.accuracy+'%']].map(function(x){return'<div class="stat"><b>'+x[1]+'</b>'+x[0]+'</div>'}).join('');
+chart('c1',{type:'doughnut',data:{labels:['Fake','Real','Uncertain'],datasets:[{data:[f,r,H.length-f-r],backgroundColor:['#ef4444','#10b981','#f59e0b']}]}});
+var R=H.slice(0,15).reverse();chart('c2',{type:'line',data:{labels:R.map(function(x,i){return '#'+(i+1)}),datasets:[{label:'Confidence %',data:R.map(function(x){return x.confidence}),borderColor:'#7c3aed',backgroundColor:'#7c3aed33',fill:true,tension:.35}]},options:{scales:{y:{min:0,max:100}}}});
+bars('#tf',s.top_fake,'#ef4444');bars('#tr',s.top_real,'#10b981');
+$('#ht').innerHTML=H.length?'<table><tr><th>Date</th><th>Text</th><th>Verdict</th><th>Conf.</th><th>Credibility</th></tr>'+H.map(function(x){return'<tr><td>'+x.created+'</td><td>'+esc(x.text.slice(0,70))+'…</td><td><span class="tag '+x.verdict+'">'+x.verdict+'</span></td><td>'+x.confidence+'%</td><td>'+x.credibility+'</td></tr>'}).join('')+'</table>':'<p class="mu">No checks yet. Analyze some news above!</p>';window._H=H}
+$('#clr').onclick=async function(){if(confirm('Delete all history?')){await api('/api/history',{method:'DELETE'});load()}};
+$('#ex').onclick=function(){var H=window._H||[];if(!H.length)return toast('Nothing to export');var c='date,verdict,confidence,credibility,text\n'+H.map(function(x){return[x.created,x.verdict,x.confidence,x.credibility,'"'+x.text.replace(/"/g,"'")+'"'].join(',')}).join('\n');var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([c],{type:'text/csv'}));a.download='fake-news-history.csv';a.click()};
+$('#bgo').onclick=async function(){var L=$('#bx').value.split(/\r?\n/).filter(function(x){return x.trim().length>=15});if(!L.length)return toast('Enter at least one line (15+ characters)');
+var r=await post('/api/batch',{texts:L});if(!r)return;$('#bt').innerHTML='<table><tr><th>Text</th><th>Verdict</th><th>Conf.</th><th>Credibility</th></tr>'+r.results.map(function(x){return'<tr><td>'+esc(x.text)+'</td><td><span class="tag '+x.verdict+'">'+x.verdict+'</span></td><td>'+x.confidence+'%</td><td>'+x.credibility+'</td></tr>'}).join('')+'</table>'};
+function parseCSV(t){var rows=[],row=[],f='',q=false;for(var i=0;i<t.length;i++){var c=t[i];if(q){if(c==='"'){if(t[i+1]==='"'){f+='"';i++}else q=false}else f+=c}else if(c==='"')q=true;else if(c===','){row.push(f);f=''}else if(c==='\n'){row.push(f);rows.push(row);row=[];f=''}else if(c!=='\r')f+=c}if(f||row.length){row.push(f);rows.push(row)}return rows}
+$('#csv').onchange=async function(){var f=this.files[0];if(!f)return;var R=parseCSV(await f.text()),h=R[0].map(function(x){return x.trim().toLowerCase()}),ti=h.indexOf('text'),li=h.indexOf('label');if(ti<0||li<0)return toast('CSV needs columns: text,label');
+var rows=R.slice(1).filter(function(r){return r[ti]&&r[ti].trim()&&(r[li]==='0'||r[li]==='1')}).slice(0,5000).map(function(r){return{text:r[ti].slice(0,3000),label:parseInt(r[li])}});
+$('#tm').textContent='Training on '+rows.length+' rows...';var r=await post('/api/train',{rows:rows});if(r){$('#tm').textContent='✅ Retrained. Accuracy '+r.metrics.accuracy+'%, F1 '+r.metrics.f1+'%';toast('Model retrained');load()}else $('#tm').textContent=''};
+load();
+</script></body></html>
